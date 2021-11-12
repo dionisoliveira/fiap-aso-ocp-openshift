@@ -1,0 +1,1 @@
+# fiap-aso-ocp-openshift
