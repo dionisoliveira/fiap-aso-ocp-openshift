@@ -18,7 +18,7 @@ spec:
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
-  name: example
+  name: blog-route
   namespace: fiap-aso6-grupo07
 spec:
   path: /
