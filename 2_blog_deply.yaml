@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blog-from-image
+  namespace: fiap-aso6-grupo07
+spec:
+  replicas: 1
+  selector: 
+    matchLabels:
+      app: blog-from-image
+  template:
+    metadata:
+      labels: 
+        app: blog-from-image
+    spec: 
+      containers:
+        - name: blog-django-py-git
+          image: default-route-openshift-image-registry.apps.na46.prod.nextcle.com/fiap-aso6-grupo07/blog-django-py-git
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+    
