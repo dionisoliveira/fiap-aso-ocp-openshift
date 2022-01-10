@@ -15,8 +15,27 @@ spec:
     spec: 
       containers:
         - name: blog-django-py-git
-          image: default-route-openshift-image-registry.apps.na46.prod.nextcle.com/fiap-aso6-grupo07/blog-django-py-git
+          image: openshiftkatacoda/blog-django-py
           ports:
             - containerPort: 8080
               protocol: TCP
-    
+---    
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hpascale
+  namespace: fiap-aso6-grupo07
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: blog-from-image
+  minReplicas: 1
+  maxReplicas: 3
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          averageUtilization: 50
+          type: Utilization

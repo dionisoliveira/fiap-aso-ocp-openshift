@@ -1,0 +1,40 @@
+kind: List
+#apiVersion: v1
+items:
+#- kind: ProjectRequest
+ # apiVersion: project.openshift.io/v1
+  #description: 'Projeto grupo 07'
+  #metadata:
+   # name:  fiap-aso6-grupo07
+- kind: "BuildConfig"
+metadata:
+  name: blog-from-image-config
+  namespace: fiap-aso6-grupo07
+spec:
+  nodeSelector: null
+  output:
+    to:
+      kind: ImageStreamTag
+      name: 'blog-django-py-git:latest'
+  postCommit: {}
+  source:
+    type: Git
+    git:
+      uri: 'https://github.com/openshift-katacoda/blog-django-py.git'
+    contextDir: /
+  strategy:
+    type: Source
+    sourceStrategy:
+      from:
+        kind: ImageStreamTag
+        namespace: openshift
+        name: 'python:3.8-ubi7'
+    output:
+      to:
+        kind: ImageStreamTag
+        name: blog-django:latest
+    successfulBuildsHistoryLimit: 5
+    failedBuildsHistoryLimit: 5
+ 
+
+    
