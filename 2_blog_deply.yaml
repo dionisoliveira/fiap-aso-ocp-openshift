@@ -3,6 +3,14 @@ kind: Deployment
 metadata:
   name: blog-from-image
   namespace: fiap-aso6-grupo07
+  labels:
+    app: blog-django-py
+    app.kubernetes.io/component: blog-django-py
+    app.kubernetes.io/instance: blog-django-py
+    app.kubernetes.io/name: python
+    app.kubernetes.io/part-of: blog-django-py-app
+    app.openshift.io/runtime: python
+    app.openshift.io/runtime-version: 3.8-ubi7
 spec:
   replicas: 1
   selector: 
@@ -15,10 +23,138 @@ spec:
     spec: 
       containers:
         - name: blog-django-py-git
-          image: openshiftkatacoda/blog-django-py
+          image: image-registry.openshift-image-registry.svc:5000/fiap-aso6-grupo07/blog-django-py:latest
+          imagePullPolicy: Always
+         
+
+
+--- 
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: blog-route
+  namespace: fiap-aso6-grupo07
+spec:
+  path: /
+  to:
+    kind: Service
+    name: blog-clusterip-srv
+    weight: 100
+  port:
+    targetPort: 8080-tcp
+    wildcardPolicy: None
+
+---
+kind: DeploymentConfig
+apiVersion: apps.openshift.io/v1
+metadata:
+  name: blog-database
+  namespace: fiap-aso6-grupo07
+spec:
+  triggers:
+    - type: ImageChange
+      imageChangeParams:
+        automatic: true
+        containerNames:
+          - postgresql
+        from:
+          kind: ImageStreamTag
+          namespace: openshift
+          name: 'postgresql:10-el8'
+        lastTriggeredImage: >-
+          image-registry.openshift-image-registry.svc:5000/openshift/postgresql@sha256:c58b255376a4c1f6744b56389f0984f465b74e9c6a62626894f850ab74dec0ea
+    - type: ConfigChange
+  replicas: 1
+  revisionHistoryLimit: 10
+  test: false
+  selector:
+    name: blog-database
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        name: blog-database
+      annotations:
+        openshift.io/generated-by: OpenShiftNewApp
+    spec:
+      volumes:
+        - name: blog-database-data
+          persistentVolumeClaim:
+            claimName: blog-database
+      containers:
+        - resources:
+            limits:
+              memory: 512Mi
+          readinessProbe:
+            exec:
+              command:
+                - /usr/libexec/check-container
+            initialDelaySeconds: 5
+            timeoutSeconds: 1
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          terminationMessagePath: /dev/termination-log
+          name: postgresql
+          livenessProbe:
+            exec:
+              command:
+                - /usr/libexec/check-container
+                - '--live'
+            initialDelaySeconds: 120
+            timeoutSeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          env:
+            - name: POSTGRESQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: blog-database
+                  key: database-user
+            - name: POSTGRESQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: blog-database
+                  key: database-password
+            - name: POSTGRESQL_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: blog-database
+                  key: database-name
+          securityContext:
+            capabilities: {}
+            privileged: false
           ports:
-            - containerPort: 8080
+            - containerPort: 5432
               protocol: TCP
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: blog-database-data
+              mountPath: /var/lib/pgsql/data
+          terminationMessagePolicy: File
+          image: >-
+            image-registry.openshift-image-registry.svc:5000/openshift/postgresql@sha256:c58b255376a4c1f6744b56389f0984f465b74e9c6a62626894f850ab74dec0ea
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      securityContext: {}
+      schedulerName: default-scheduler
+
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: blog-database
+  namespace: fiap-aso6-grupo07
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: standard
+
 ---    
 apiVersion: autoscaling/v2beta2
 kind: HorizontalPodAutoscaler
@@ -39,3 +175,5 @@ spec:
         target:
           averageUtilization: 50
           type: Utilization
+
+
