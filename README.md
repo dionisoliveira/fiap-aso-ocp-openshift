@@ -1,4 +1,9 @@
 # fiap-aso-ocp-openshift
 
-You need create a project with the name fiap-aso6-grupo07:<br>
-oc new-project fiap-aso6-grupo07
+Projeto entrege pelo grupo 07 para a fase 04
+
+Participantes 
+DIONIS SILVA OLIVEIRA(RM341246)
+MARCELO TOSSATO
+GUILHERME NOMINATO(RM341535)
+ANDERSON PERRELI(RM341274)
