@@ -14,3 +14,10 @@ Projeto entrege pelo grupo 07 para a fase 04
    - Criar um novo namespace com o nome fiap-aso6-grupo07.
      *Openshift de curso não permite criar namespce via deploy.
    - Executar o comando oc apply -f 0_build_app.yaml
+
+
+------
+
+Arquivo dockerfile customizado.
+
+ 
