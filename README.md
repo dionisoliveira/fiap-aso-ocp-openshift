@@ -4,7 +4,7 @@ Projeto entrege pelo grupo 07 para a fase 04
 
  - Participantes 
    - DIONIS SILVA OLIVEIRA(RM341246)
-   - MARCELO TOSSATO
+   - MARCELO TOSSATO(RM341926)
    - GUILHERME NOMINATO(RM341535)
    - ANDERSON PERRELI(RM341274)
 
