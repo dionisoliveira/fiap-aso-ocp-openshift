@@ -1,68 +1,22 @@
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: blog-django-py
-  namespace: fiap-aso6-grupo07
-  labels:
-    app: blog-django-py
-    app.kubernetes.io/component: blog-django-py
-    app.kubernetes.io/instance: blog-django-py
-    app.kubernetes.io/name: python
-    app.kubernetes.io/part-of: blog-django-py-app
-    app.openshift.io/runtime: python
-    app.openshift.io/runtime-version: 3.8-ubi7
-spec:
-  replicas: 1
-  selector: 
-    matchLabels:
-      app: blog-django-py
-  
-  template:
-    metadata:
-      labels: 
-        app: blog-django-py
-    spec: 
-      containers:
-        - name: blog-django-py
-          image:  default-route-openshift-image-registry.apps.na46.prod.nextcle.com/fiap-aso6-grupo07/blog-django-py
-          imagePullPolicy: Always
-          env:
-            - name: DATABASE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: fiap-aso6-grupo07-secret
-                  key: database-url                         
-            - name: BLOG_SITE_NAME
-              valueFrom:
-                configMapKeyRef:
-                  name: fiap-aso6-grupo07-config-map
-                  key: blog.site.name
-            - name: BLOG_BANNER_COLOR
-              valueFrom:
-                configMapKeyRef:
-                  name: fiap-aso6-grupo07-config-map
-                  key: blog.site.color
-         
 
 
-
----
-kind: ConfigMap
+kind: Secret
 apiVersion: v1
 metadata:
-  name:   blog-django-py-config-map
-  namespace: fiap-aso6-grupo07
+  name: fiap-aso6-grupo07-secret
+  namespace:  fiap-aso6-grupo07
   labels:
     app: blog-django-py
     app.kubernetes.io/component: blog-django-py
     app.kubernetes.io/instance: blog-django-py
-    app.kubernetes.io/name: python
-    app.kubernetes.io/part-of: blog-django-py-app
-    app.openshift.io/runtime: python
-    app.openshift.io/runtime-version: 3.8-ubi7
-data:
-  blog.site.color: blue
-  blog.site.name: NOSSO BLOG /*DIONIS SILVA OLIVEIRA, MARCELO TOSSATO, GUILHERME NOMINATO, ANDERSON PERRELI*/
+    template: postgresql-persistent-template
+stringData:
+  database-name: groupo07
+  database-password: sampledb
+  database-user: sampledb
+  database-url: postgresql://groupo07:sampledb@blog-django-py-service:5432/sampledb
+type: Opaque
+
 
 ---
 kind: DeploymentConfig
@@ -174,6 +128,61 @@ spec:
     requests:
       storage: 1Gi
   storageClassName: standard
+
+
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name:   blog-django-py-config-map
+  namespace: fiap-aso6-grupo07
+  labels:
+    app: blog-django-py
+    app.kubernetes.io/component: blog-django-py
+    app.kubernetes.io/instance: blog-django-py
+    app.kubernetes.io/name: python
+    app.kubernetes.io/part-of: blog-django-py-app
+    app.openshift.io/runtime: python
+    app.openshift.io/runtime-version: 3.8-ubi7
+data:
+  blog.site.color: blue
+  blog.site.name: NOSSO BLOG /*DIONIS SILVA OLIVEIRA, MARCELO TOSSATO, GUILHERME NOMINATO, ANDERSON PERRELI*/
+
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: blog-django-py
+  namespace: fiap-aso6-grupo07
+  labels:
+    app: blog-django-py
+    app.kubernetes.io/component: blog-django-py
+    app.kubernetes.io/instance: blog-django-py
+    app.kubernetes.io/name: python
+    app.kubernetes.io/part-of: blog-django-py-app
+    app.openshift.io/runtime: python
+    app.openshift.io/runtime-version: 3.8-ubi7
+spec:
+  replicas: 1
+  selector: 
+    matchLabels:
+      app: blog-django-py
+  
+  template:
+    metadata:
+      labels: 
+        app: blog-django-py
+    spec: 
+      containers:
+        - name: blog-django-py
+          image:  default-route-openshift-image-registry.apps.na46.prod.nextcle.com/fiap-aso6-grupo07/blog-django-py
+          imagePullPolicy: Always
+         
+         
+
+
+
 
 ---    
 apiVersion: autoscaling/v2beta2
