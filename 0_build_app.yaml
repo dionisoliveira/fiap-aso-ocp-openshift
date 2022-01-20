@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: blog-from-image
+  name: blog-django-py
   namespace: fiap-aso6-grupo07
   labels:
     app: blog-django-py
@@ -15,34 +15,54 @@ spec:
   replicas: 1
   selector: 
     matchLabels:
-      app: blog-from-image
+      app: blog-django-py
+  
   template:
     metadata:
       labels: 
-        app: blog-from-image
+        app: blog-django-py
     spec: 
       containers:
-        - name: blog-django-py-git
-          image: image-registry.openshift-image-registry.svc:5000/fiap-aso6-grupo07/blog-django-py:latest
+        - name: blog-django-py
+          image:  default-route-openshift-image-registry.apps.na46.prod.nextcle.com/fiap-aso6-grupo07/blog-django-py
           imagePullPolicy: Always
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: fiap-aso6-grupo07-secret
+                  key: database-url                         
+            - name: BLOG_SITE_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: fiap-aso6-grupo07-config-map
+                  key: blog.site.name
+            - name: BLOG_BANNER_COLOR
+              valueFrom:
+                configMapKeyRef:
+                  name: fiap-aso6-grupo07-config-map
+                  key: blog.site.color
          
 
 
---- 
-apiVersion: route.openshift.io/v1
-kind: Route
+
+---
+kind: ConfigMap
+apiVersion: v1
 metadata:
-  name: blog-route
+  name:   blog-django-py-config-map
   namespace: fiap-aso6-grupo07
-spec:
-  path: /
-  to:
-    kind: Service
-    name: blog-clusterip-srv
-    weight: 100
-  port:
-    targetPort: 8080-tcp
-    wildcardPolicy: None
+  labels:
+    app: blog-django-py
+    app.kubernetes.io/component: blog-django-py
+    app.kubernetes.io/instance: blog-django-py
+    app.kubernetes.io/name: python
+    app.kubernetes.io/part-of: blog-django-py-app
+    app.openshift.io/runtime: python
+    app.openshift.io/runtime-version: 3.8-ubi7
+data:
+  blog.site.color: blue
+  blog.site.name: NOSSO BLOG /*DIONIS SILVA OLIVEIRA, MARCELO TOSSATO, GUILHERME NOMINATO, ANDERSON PERRELI*/
 
 ---
 kind: DeploymentConfig
@@ -176,4 +196,122 @@ spec:
           averageUtilization: 50
           type: Utilization
 
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  annotations:
+    app.openshift.io/vcs-ref: ''
+    app.openshift.io/vcs-uri: 'https://github.com/openshift-instruqt/blog-django-py'
+    openshift.io/generated-by: OpenShiftWebConsole
+  name: blog-django-py
+  managedFields:
+    - manager: Mozilla
+      operation: Update
+      apiVersion: v1
+      time: '2022-01-10T20:25:11Z'
+      fieldsType: FieldsV1
+      
+  namespace: fiap-aso6-grupo07
+  labels:
+    app: blog-django-py
+    app.kubernetes.io/component: blog-django-py
+    app.kubernetes.io/instance: blog-django-py
+    app.kubernetes.io/name: python
+    app.kubernetes.io/part-of: blog-django-py-app
+    app.openshift.io/runtime: python
+    app.openshift.io/runtime-version: 3.8-ubi7
+spec:
+  ports:
+    - name: 8080-tcp
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+  selector:
+    app: blog-django-py
+ 
+
+  type: ClusterIP
+  sessionAffinity: None
+status:
+  loadBalancer: {}
+
+
+
+--- 
+
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: allow-from-all-namespaces
+  namespace: fiap-aso6-grupo07
+  generation: 1
+
+  managedFields:
+    - manager: openshift-apiserver
+      operation: Update
+      apiVersion: networking.k8s.io/v1
+      fieldsType: FieldsV1
+     
+spec:
+  podSelector: {}
+  ingress:
+    - from:
+        - namespaceSelector: {}
+  policyTypes:
+    - Ingress
+---
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: blog-django-py
+  namespace: fiap-aso6-grupo07
+  labels:
+    app: blog-django-py
+    app.kubernetes.io/component: blog-django-py
+    app.kubernetes.io/instance: blog-django-py
+    app.kubernetes.io/name: python
+    app.kubernetes.io/part-of: blog-django-py-app
+    app.openshift.io/runtime: python
+    app.openshift.io/runtime-version: 3.8-ubi7
+spec:
+  host: fiap-aso6-grupo07.apps.na46.prod.nextcle.com
+  to:
+    kind: Service
+    name: blog-django-py
+    weight: 100
+  port:
+    targetPort: 8080-tcp
+  wildcardPolicy: None
+status:
+  ingress:
+    - host: fiap-aso6-grupo07.apps.na46.prod.nextcle.com
+      routerName: default
+      wildcardPolicy: None
+      routerCanonicalHostname: apps.na46.prod.nextcle.com
+
+--- 
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: allow-from-ingress-namespace
+  namespace: fiap-aso6-grupo07
+  generation: 1
+  managedFields:
+    - manager: openshift-apiserver
+      operation: Update
+      apiVersion: networking.k8s.io/v1
+      fieldsType: FieldsV1
+    
+spec:
+  podSelector: {}
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              network-policy: global
+  policyTypes:
+    - Ingress
 
